@@ -41,6 +41,7 @@ $RECYCLE.BIN/
 
 # Local environment variables
 .env
+config/agent-settings.json
 
 # Python Salesforce Functions
 **/__pycache__/

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if [ -f "config/agent-settings.local.json" ]; then
+  echo "[post-commit] Restoring local agent user from config/agent-settings.local.json..."
+  npm run -s agent:apply-config
+else
+  echo "[post-commit] No local override file found. Skipping restore."
+fi

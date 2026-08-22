@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+echo "[pre-commit] Resetting agent user to safe committed value..."
+npm run -s agent:reset-config
+
+echo "[pre-commit] Staging safe .agent values..."
+git add force-app/main/default/aiAuthoringBundles
+
+echo "[pre-commit] Verifying safe state..."
+npm run -s agent:verify-safe

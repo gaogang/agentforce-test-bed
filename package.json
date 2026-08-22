@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "description": "Salesforce App",
   "scripts": {
+    "agent:apply-config": "node scripts/apply-agent-config.mjs",
+    "agent:reset-config": "node scripts/apply-agent-config.mjs --base-only",
+    "agent:verify-safe": "node scripts/apply-agent-config.mjs --verify-safe",
+    "hooks:install": "sh scripts/install-git-hooks.sh",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\""
   },

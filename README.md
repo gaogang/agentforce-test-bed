@@ -28,6 +28,57 @@ Your new Salesforce DX project is ready to use.
 
 But you can further configure it by editing the `sfdx-project.json` file. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file. 
 
+### Configure Default Agent User
+
+The `.agent` files in this repo use `access.default_agent_user`. To manage that value from one place:
+
+1. Keep `config/agent-settings.json` as the safe, committed default (placeholder).
+2. Create a local override that is gitignored:
+
+```bash
+cp config/agent-settings.local.example.json config/agent-settings.local.json
+```
+
+3. Edit `config/agent-settings.local.json` and set your real `defaultAgentUser`.
+4. Apply before deployment:
+
+```bash
+npm run agent:apply-config
+```
+
+This updates all `.agent` files under `force-app/main/default/aiAuthoringBundles` with your local override value.
+
+5. After deployment, reset to safe committed value:
+
+```bash
+npm run agent:reset-config
+```
+
+6. Before commit, run a safety check:
+
+```bash
+npm run agent:verify-safe
+```
+
+The safety check fails if any `.agent` file still contains a non-base `default_agent_user`.
+
+### Fully Automated Git Workflow
+
+You can automate this so Git handles reset/restore on every commit:
+
+1. Install hooks once per local clone:
+
+```bash
+npm run hooks:install
+```
+
+2. What happens automatically:
+
+- `pre-commit`: runs `agent:reset-config`, stages `.agent` files, and runs `agent:verify-safe` so commits only include safe placeholder values.
+- `post-commit`: runs `agent:apply-config` to restore your local real agent user (from `config/agent-settings.local.json`) in your working tree.
+
+Hook files are stored in `.githooks/` and activated by setting `core.hooksPath`.
+
 ## Enable Skills in Agentforce Vibes to Vibe Code Agents
 
 To vibe code agents using Agentforce Vibes, first open the Agentforce Vibes panel. Click the **Manage Skills, Rules, Workflows, and Hookss** icon, then the **Skills** tab, and ensure these skills are enabled:
