@@ -11,7 +11,7 @@ config:
     agent_type: "AgentforceServiceAgent"
 
 access:
-    default_agent_user: "draft_precall@00dwi00000c4mut1316317736.ext"
+    default_agent_user: "your-safe-placeholder@your-org.example.com"
 variables:
     accountId: mutable string = ""
         description: "Salesforce Account Id resolved from rep input"

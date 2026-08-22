@@ -11,7 +11,7 @@ config:
     agent_type: "AgentforceServiceAgent"
 
 access:
-    default_agent_user: "draft_precall@00dwi00000c4mut1316317736.ext"
+    default_agent_user: "your-safe-placeholder@your-org.example.com"
 variables:
     pageToken: mutable string = ""
         description: "Next page token returned by ClinicalTrials.gov"
