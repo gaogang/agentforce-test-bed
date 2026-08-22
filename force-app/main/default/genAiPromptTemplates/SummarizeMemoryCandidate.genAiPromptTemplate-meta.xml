@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Converts raw conversational content into a concise, durable memory statement ready to pass to store_long_term_memory. Infers the memory type (Semantic, Episodic, or Procedural) from the content.</description>
+    <masterLabel>Summarize Memory Candidate</masterLabel>
+    <templateVersions>
+        <content>You are a memory distillation assistant for an Agentforce agent.
+
+Your task: read the raw input below and produce a single, concise, durable memory statement (1-3 sentences) that captures the most important fact, preference, or outcome worth remembering across future sessions.
+
+Rules:
+- Write in third person or factual form (e.g. "Dr. Smith prefers concise talkpoints focused on efficacy data.")
+- Omit filler, pleasantries, and session-specific context that will not matter next time.
+- If the content contains a preference, classify as Semantic.
+- If the content describes a specific outcome or event that happened, classify as Episodic.
+- If the content describes a repeatable process or workflow preference, classify as Procedural.
+- If no durable fact is present, return memoryText as NO_MEMORY and memoryType as Semantic.
+
+Raw content to summarize:
+{!$Input:AdditionalContext}
+
+Respond with ONLY the following two lines, no other text:
+memoryText: [the memory statement]
+memoryType: [Semantic, Episodic, or Procedural]</content>
+        <inputs>
+            <apiName>AdditionalContext</apiName>
+            <definition>SOBJECT://User</definition>
+            <referenceName>Input:AdditionalContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude3Haiku</primaryModel>
+        <status>Published</status>
+    </templateVersions>
+    <type>einstein_gpt__flex</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

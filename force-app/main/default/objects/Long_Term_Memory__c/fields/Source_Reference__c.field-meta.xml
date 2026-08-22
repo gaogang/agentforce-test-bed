@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source_Reference__c</fullName>
+    <label>Source Reference</label>
+    <description>Human-readable lineage reference for audit and debugging, e.g. agentforce:msg_001.</description>
+    <inlineHelpText>Format: sourceSystem:sourceRecordId. Used for audit tracing and explainability.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

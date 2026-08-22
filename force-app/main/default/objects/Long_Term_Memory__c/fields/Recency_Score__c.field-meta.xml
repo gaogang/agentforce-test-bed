@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Recency_Score__c</fullName>
+    <label>Recency Score</label>
+    <description>Freshness signal used in ranking. Starts at 1.0 at write time and decays over time. Range 0 to 1.</description>
+    <inlineHelpText>More recently written or accessed memories rank higher. Updated when a duplicate is refreshed.</inlineHelpText>
+    <type>Number</type>
+    <precision>4</precision>
+    <scale>3</scale>
+    <required>false</required>
+</CustomField>

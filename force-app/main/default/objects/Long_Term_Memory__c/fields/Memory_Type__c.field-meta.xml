@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Memory_Type__c</fullName>
+    <label>Memory Type</label>
+    <description>Classification of the memory content: durable fact, past event summary, or preferred way of working.</description>
+    <inlineHelpText>Semantic = durable fact or preference. Episodic = summary of a past interaction. Procedural = remembered working method or output preference.</inlineHelpText>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Semantic</fullName><default>true</default><label>Semantic</label></value>
+            <value><fullName>Episodic</fullName><default>false</default><label>Episodic</label></value>
+            <value><fullName>Procedural</fullName><default>false</default><label>Procedural</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

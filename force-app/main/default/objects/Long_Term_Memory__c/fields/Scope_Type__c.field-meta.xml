@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scope_Type__c</fullName>
+    <label>Scope Type</label>
+    <description>Scope boundary that determines which sessions and agents can retrieve this memory.</description>
+    <inlineHelpText>One of: personal, account, territory, team, org. Controls retrieval isolation.</inlineHelpText>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>personal</fullName><default>true</default><label>personal</label></value>
+            <value><fullName>account</fullName><default>false</default><label>account</label></value>
+            <value><fullName>territory</fullName><default>false</default><label>territory</label></value>
+            <value><fullName>team</fullName><default>false</default><label>team</label></value>
+            <value><fullName>org</fullName><default>false</default><label>org</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

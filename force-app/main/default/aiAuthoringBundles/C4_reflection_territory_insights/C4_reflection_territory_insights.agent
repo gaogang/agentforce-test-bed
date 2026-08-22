@@ -1,0 +1,358 @@
+system:
+    instructions: "You are a daily territory intelligence agent for a pharmaceutical sales organisation. You run autonomously once per day. You collect territory data, generate insights through a reflection loop, and store the final approved insights."
+
+config:
+    developer_name: "C4_reflection_territory_insights"
+    agent_label: "C4 Territory Insights"
+    description: "Autonomous daily agent that gathers territory data, runs a generator-critic reflection loop (max 3 iterations) to produce high-quality territory insights, and stores the final synthesised narrative in Territory_Insight__c."
+    agent_type: "AgentforceServiceAgent"
+
+access:
+    default_agent_user: "your-agent-user@your-org.example.com"
+
+variables:
+    territoryId: mutable string = ""
+        description: "Territory2 record Id injected by the scheduled trigger"
+    reportDate: mutable object = None
+        description: "Report date injected by the scheduled trigger (YYYY-MM-DD)"
+    territoryDataBundle: mutable string = ""
+        description: "JSON data bundle returned by the Gather Territory Data action"
+    iterationCount: mutable number = 0
+        description: "Tracks how many draft versions have been reviewed by the critic"
+    critiqueStatus: mutable string = ""
+        description: "Status returned by the critic: approved or revise"
+    critiqueIssues: mutable string = ""
+        description: "JSON array of issues returned by the critic; empty string when approved"
+    performanceSummary: mutable string = ""
+        description: "Current synthesised performance narrative from the generator"
+    marketShareInsights: mutable string = ""
+        description: "Current synthesised market share narrative from the generator"
+    competitiveInsights: mutable string = ""
+        description: "Current synthesised competitive insights narrative from the generator"
+    cyclePlanInsights: mutable string = ""
+        description: "Current synthesised cycle plan narrative from the generator"
+    recommendedFocusAreas: mutable string = ""
+        description: "Current synthesised recommended focus areas narrative from the generator"
+    insightsVersion: mutable number = 0
+        description: "Version number of the current insights draft; incremented on each revision"
+    insightsStored: mutable boolean = False
+        description: "Set to True once the Store Territory Insights action succeeds"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route the incoming message to the territory insights orchestrator or to the appropriate guardrail subagent"
+
+    reasoning:
+        instructions: ->
+            | Evaluate the incoming message and route it to the best-matching subagent.
+              - If the message contains a territoryId and reportDate injected by the scheduler,
+                route to the territory_insights_orchestrator.
+              - If the user is asking to speak with a person or escalate, route to escalation.
+              - If the message is clearly unrelated to territory insights or this agent's purpose,
+                route to off_topic.
+              - If the message is too vague to determine intent, route to ambiguous_question.
+              When in doubt about a scheduler-injected message, always prefer territory_insights_orchestrator.
+        actions:
+            go_to_orchestrator: @utils.transition to @subagent.territory_insights_orchestrator
+                description: "Scheduler-injected message containing territoryId and reportDate, or any territory insights request"
+            go_to_escalation: @utils.transition to @subagent.escalation
+                description: "User explicitly asks to speak with a person or escalate the conversation"
+            go_to_off_topic: @utils.transition to @subagent.off_topic
+                description: "Message is clearly unrelated to territory insights or this agent's autonomous purpose"
+            go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
+                description: "Message intent cannot be determined — too vague to route confidently"
+
+subagent territory_insights_orchestrator:
+    label: "Territory Insights Orchestrator"
+    description: "Orchestrates the full territory insights generation cycle: data collection, reflection loop, and storage"
+
+    reasoning:
+        instructions: ->
+            # This workflow must run end-to-end autonomously.
+            # Never ask the user how to proceed.
+
+            # POST-ACTION: store once the critic has approved or max iterations were reached.
+            if (@variables.critiqueStatus == "approved" or @variables.critiqueStatus == "max_iterations_reached") and @variables.insightsStored == False:
+                run @actions.store_territory_insights
+                    with territoryId = @variables.territoryId
+                    with reportDate = @variables.reportDate
+                    with performanceSummary = @variables.performanceSummary
+                    with marketShareInsights = @variables.marketShareInsights
+                    with competitiveInsights = @variables.competitiveInsights
+                    with cyclePlanInsights = @variables.cyclePlanInsights
+                    with recommendedFocusAreas = @variables.recommendedFocusAreas
+                    with iterationCount = @variables.insightsVersion
+                    with approvalStatus = @variables.critiqueStatus
+                    set @variables.insightsStored = @outputs.success
+
+            # POST-ACTION: after storing, present the final approved insights to the user
+            if @variables.insightsStored == True:
+                | The territory insights for {!@variables.territoryId} have been generated, reviewed, and stored (version {!@variables.insightsVersion}).
+                  Present ONLY the five narrative fields below as the response to the user.
+                  Do NOT mention the critic review, critique issues, iteration count, or any internal process.
+                  Do NOT summarise or paraphrase — output the fields verbatim under these headings:
+
+                  **Performance Summary**
+                  {!@variables.performanceSummary}
+
+                  **Market Share Insights**
+                  {!@variables.marketShareInsights}
+
+                  **Competitive Insights**
+                  {!@variables.competitiveInsights}
+
+                  **Cycle Plan Insights**
+                  {!@variables.cyclePlanInsights}
+
+                  **Recommended Focus Areas**
+                  {!@variables.recommendedFocusAreas}
+
+            # Step 1 — Extract inputs injected by the scheduler
+            if @variables.territoryId == "" or @variables.reportDate == None:
+                | Parse the incoming message and extract territoryId and reportDate.
+                  The message format is: territoryId=<value> reportDate=<value>
+                  Store the values using the capture_scheduler_inputs action.
+                  If either value is missing, set a sensible default:
+                  - territoryId: use "UNKNOWN" if absent
+                  - reportDate: use today's date in YYYY-MM-DD format if absent
+
+            # Step 2 — Gather territory data
+            if @variables.territoryId != "" and @variables.territoryDataBundle == "":
+                | Call the gather_territory_data action now.
+                  Pass @variables.territoryId and @variables.reportDate.
+                  Do not proceed until the action returns a non-empty territoryDataBundle.
+
+            # Step 3 — Immediately continue to generation once data is available
+            if @variables.territoryDataBundle != "" and @variables.insightsVersion == 0 and @variables.insightsStored == False:
+                transition to @subagent.territory_insights_generator
+
+        actions:
+            capture_scheduler_inputs: @utils.setVariables
+                description: "Extract territoryId and reportDate from the scheduler message"
+                available when @variables.territoryId == ""
+                with territoryId = ...
+                with reportDate = ...
+
+            gather_territory_data: @actions.gather_territory_data
+                description: "Collect all territory data inputs needed for insight generation"
+                available when @variables.territoryId != "" and @variables.territoryDataBundle == ""
+                with territoryId = @variables.territoryId
+                with reportDate = @variables.reportDate
+                set @variables.territoryDataBundle = @outputs.territoryDataBundle
+
+    actions:
+        gather_territory_data:
+            description: "Collects territory performance, market share, cycle plan progress, rep activity, and market news. Returns a JSON bundle."
+            label: "Gather Territory Data"
+            target: "apex://GatherTerritoryData"
+            inputs:
+                territoryId: string
+                    label: "Territory Id"
+                    description: "Salesforce Territory2 record Id"
+                    is_required: True
+                reportDate: object
+                    complex_data_type_name: "lightning__dateType"
+                    label: "Report Date"
+                    description: "Date for which insights are being generated"
+                    is_required: False
+            outputs:
+                territoryDataBundle: string
+                    label: "territoryDataBundle"
+                    description: "JSON string containing all territory data inputs"
+                    filter_from_agent: True
+
+        store_territory_insights:
+            description: "Persists the final synthesised territory insights as a Territory_Insight__c record. Stores only the five narrative text fields — no raw data."
+            label: "Store Territory Insights"
+            target: "apex://StoreTerritoryInsights"
+            inputs:
+                territoryId: string
+                    label: "Territory Id"
+                    description: "Salesforce Territory2 record Id"
+                    is_required: True
+                reportDate: object
+                    complex_data_type_name: "lightning__dateType"
+                    label: "Report Date"
+                    description: "Date the insights were generated"
+                    is_required: True
+                performanceSummary: string
+                    label: "Performance Summary"
+                    description: "Synthesised narrative from the generator"
+                    is_required: True
+                marketShareInsights: string
+                    label: "Market Share Insights"
+                    description: "Synthesised narrative from the generator"
+                    is_required: True
+                competitiveInsights: string
+                    label: "Competitive Insights"
+                    description: "Synthesised narrative from the generator"
+                    is_required: True
+                cyclePlanInsights: string
+                    label: "Cycle Plan Insights"
+                    description: "Synthesised narrative from the generator"
+                    is_required: True
+                recommendedFocusAreas: string
+                    label: "Recommended Focus Areas"
+                    description: "Synthesised narrative from the generator"
+                    is_required: True
+                iterationCount: object
+                    complex_data_type_name: "lightning__integerType"
+                    label: "Iteration Count"
+                    description: "Number of reflection iterations completed"
+                    is_required: True
+                approvalStatus: string
+                    label: "Approval Status"
+                    description: "approved or max_iterations_reached"
+                    is_required: True
+            outputs:
+                recordId: string
+                    label: "recordId"
+                    description: "Id of the newly created Territory_Insight__c record"
+                    filter_from_agent: True
+                success: boolean
+                    label: "success"
+                    description: "True if the record was created without error"
+                    filter_from_agent: True
+
+subagent territory_insights_generator:
+    label: "Territory Insights Generator"
+    description: "Generates and iteratively revises the five synthesised territory insight narratives based on the data bundle and any critic feedback"
+    reasoning:
+        instructions: ->
+            | You are a territory insights writer for a pharmaceutical sales organisation.
+              Use the most capable available model (Claude Sonnet or equivalent) for this task.
+                            This subagent is autonomous. Never ask the user for input, confirmation, or next steps.
+
+              You will be invoked in one of two modes:
+
+              INITIAL GENERATION (when no previous draft exists):
+              - You receive a territoryDataBundle JSON string containing: territory metadata,
+                performance figures, market share data, cycle plan progress, rep activity, and
+                market news.
+              - Produce five narrative text fields. All fields must be written as clear,
+                manager-readable prose. Do not output raw numbers, JSON, or bullet lists of
+                uninterpreted data — interpret the data and tell the story.
+                  1. performanceSummary: overview of revenue attainment vs target, growth vs
+                     prior period, and what it means for the territory.
+                  2. marketShareInsights: interpretation of product share trends and what
+                     they signal for rep focus and prioritisation.
+                  3. competitiveInsights: summary of identified competitor activity and a
+                     concrete recommended response.
+                  4. cyclePlanInsights: assessment of cycle plan pace, days remaining,
+                     calls required per day, and which reps are behind.
+                  5. recommendedFocusAreas: prioritised, concrete actions for the territory
+                     manager — each action must name a specific rep and include a timeframe.
+              - Return all five fields plus version=1.
+
+              REVISION (when critiqueIssues is non-empty):
+              - You receive the five current narrative fields plus a critiqueIssues JSON array.
+              - Address every issue listed in critiqueIssues.
+              - Do not change factual values — only improve clarity, completeness, specificity,
+                and actionability.
+              - Return all five revised fields plus the incremented version number.
+
+                            Loop ownership:
+                            - After writing each draft, immediately run return_insights_draft.
+                            - Then immediately transition to the critic using go_to_critic.
+                            - Never transition directly to the orchestrator.
+
+              Do not fabricate data not present in the territoryDataBundle.
+              Do not output JSON objects or arrays in any of the five narrative fields.
+
+        actions:
+            return_insights_draft: @utils.setVariables
+                description: "Store the five narrative fields and version number, then return to the orchestrator"
+                with performanceSummary = ...
+                with marketShareInsights = ...
+                with competitiveInsights = ...
+                with cyclePlanInsights = ...
+                with recommendedFocusAreas = ...
+                with insightsVersion = ...
+                with iterationCount = ...
+                with critiqueStatus = ""
+                with critiqueIssues = ""
+
+            go_to_critic: @utils.transition to @subagent.territory_insights_critic
+                description: "Send the current draft to the critic for review"
+
+subagent territory_insights_critic:
+    label: "Territory Insights Critic"
+    description: "Reviews the current insights draft against five quality criteria and returns either approval or a structured list of issues for the generator to address"
+    reasoning:
+        instructions: ->
+            # POST-ACTION: critique stored — route deterministically based on result
+            if @variables.critiqueStatus == "approved":
+                transition to @subagent.territory_insights_orchestrator
+
+            if @variables.critiqueStatus == "revise" and @variables.insightsVersion < 3:
+                transition to @subagent.territory_insights_generator
+
+            if @variables.critiqueStatus == "revise" and @variables.insightsVersion >= 3:
+                set @variables.critiqueStatus = "max_iterations_reached"
+                transition to @subagent.territory_insights_orchestrator
+
+            | You are a quality reviewer for territory insights reports in a pharmaceutical
+              sales organisation.
+              This subagent is autonomous. Never ask the user for input, confirmation, or next steps.
+
+              You will receive five narrative text fields representing a territory insights
+              draft. Evaluate each field rigorously against ALL five criteria:
+
+              1. Factual completeness — all five fields are present and contain specific,
+                 substantive content. No placeholder text, no generic statements.
+              2. Internal consistency — figures and claims across the five fields do not
+                 contradict each other.
+              3. Actionability — recommendedFocusAreas names specific reps with concrete
+                 next steps and timeframes. It must not restate problems without solutions.
+              4. Clarity — all fields are written in plain language understandable by a
+                 non-technical territory manager. No unexplained abbreviations or raw data.
+              5. Source fidelity — no claims are made that cannot be traced to the
+                 territoryDataBundle provided to the generator.
+
+              Evaluate the current draft now. Store your verdict using return_critique.
+              Set critiqueStatus to "approved" if all criteria pass, or "revise" with
+              critiqueIssues if any criterion fails. Be rigorous — do not approve a draft
+              containing vague language, missing specifics, or actions without named owners
+              and timeframes.
+
+        actions:
+            return_critique: @utils.setVariables
+                description: "Store the critique verdict and issue list"
+                with critiqueStatus = ...
+                with critiqueIssues = ...
+                with iterationCount = @variables.insightsVersion
+
+subagent escalation:
+    label: "Escalation"
+    description: "Handles unexpected escalation requests"
+
+    reasoning:
+        instructions: ->
+            | This agent operates autonomously. Escalation is not applicable.
+              Log the escalation request and end the session.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Escalate if unexpectedly triggered"
+
+subagent off_topic:
+    label: "Off Topic"
+    description: "Handles off-topic input to this autonomous agent"
+
+    reasoning:
+        instructions: ->
+            | This agent operates autonomously and processes territory data only.
+              Redirect any off-topic input and end the session.
+
+subagent ambiguous_question:
+    label: "Ambiguous Question"
+    description: "Handles ambiguous input to this autonomous agent"
+
+    reasoning:
+        instructions: ->
+            | This agent operates autonomously. Ambiguous input is unexpected.
+              Log the input and end the session.

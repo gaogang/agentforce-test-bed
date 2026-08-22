@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Structured_Payload__c</fullName>
+    <label>Structured Payload</label>
+    <description>Optional JSON payload for machine-oriented memory metadata or suppression reason storage.</description>
+    <inlineHelpText>Store additional structured data alongside the memory text, e.g. suppression reason JSON. Not directly injected into agent prompts.</inlineHelpText>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>3</visibleLines>
+</CustomField>

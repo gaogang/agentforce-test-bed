@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Use_Case_Key__c</fullName>
+    <label>Use Case Key</label>
+    <description>Workflow or use-case identifier that scopes memory retrieval to a specific agent capability.</description>
+    <inlineHelpText>E.g. precall, territory_review, service. Retrieval filters to this key so agents only surface relevant memories.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

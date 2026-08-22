@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Memory_Text__c</fullName>
+    <label>Memory Text</label>
+    <description>The human-readable memory statement stored for agent use.</description>
+    <inlineHelpText>The full durable memory content. Should be a concise, complete sentence that is useful out of context.</inlineHelpText>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>4</visibleLines>
+</CustomField>

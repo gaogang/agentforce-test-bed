@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Market_Share_Insights__c</fullName>
+    <description>Synthesised narrative interpretation of product share trends and what they signal for rep focus.</description>
+    <externalId>false</externalId>
+    <label>Market Share Insights</label>
+    <length>32768</length>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

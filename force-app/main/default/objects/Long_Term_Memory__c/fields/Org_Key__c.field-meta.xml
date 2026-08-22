@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Org_Key__c</fullName>
+    <label>Org Key</label>
+    <description>Tenant boundary key used to isolate memories across orgs or environments.</description>
+    <inlineHelpText>Set to your org identifier, e.g. org_demo. Used as the primary tenancy filter on all queries.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>true</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

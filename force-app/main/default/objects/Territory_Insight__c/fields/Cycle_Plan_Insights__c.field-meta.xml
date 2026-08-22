@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Cycle_Plan_Insights__c</fullName>
+    <description>Synthesised narrative assessment of cycle plan progress, pace risk, and rep-level observations.</description>
+    <externalId>false</externalId>
+    <label>Cycle Plan Insights</label>
+    <length>32768</length>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

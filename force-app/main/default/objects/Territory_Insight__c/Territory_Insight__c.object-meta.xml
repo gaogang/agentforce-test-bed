@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Stores daily AI-generated territory insights produced by the C4 Reflection Territory Insights agent. Each record holds the synthesised narrative output of one reflection run for one territory.</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>Territory Insight</label>
+    <nameField>
+        <label>Territory Insight Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>TI-{0000}</displayFormat>
+    </nameField>
+    <pluralLabel>Territory Insights</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

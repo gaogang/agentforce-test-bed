@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Run_Id__c</fullName>
+    <label>Run Id Value</label>
+    <description>Stable UUID for external correlation across logs and workflow events.</description>
+    <type>Text</type>
+    <length>100</length>
+    <required>false</required>
+    <externalId>true</externalId>
+    <unique>true</unique>
+</CustomField>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Effective_To__c</fullName>
+    <label>Effective To</label>
+    <description>End of the validity window. The memory expires and becomes non-retrievable after this datetime.</description>
+    <inlineHelpText>Defaults to one year from creation. After this date the memory is treated as expired by retrieval queries.</inlineHelpText>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>

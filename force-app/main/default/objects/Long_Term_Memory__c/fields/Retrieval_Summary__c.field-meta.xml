@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Retrieval_Summary__c</fullName>
+    <label>Retrieval Summary</label>
+    <description>Short prompt-injection-optimised summary of the memory, capped at 180 characters.</description>
+    <inlineHelpText>Used for prompt injection and lexical matching. Truncated version of Memory Text suitable for direct inclusion in agent context.</inlineHelpText>
+    <type>TextArea</type>
+</CustomField>

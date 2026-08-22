@@ -1,0 +1,126 @@
+system:
+    instructions: "You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient."
+    messages:
+        welcome: "I can search ClinicalTrials.gov studies by condition, treatment, sponsor, location, status, NCT number, and other search criteria. What would you like to find?"
+        error: "Sorry, I could not retrieve clinical trial data right now. Please try again."
+
+config:
+    developer_name: "Clinical_Trials_Data_Agent"
+    agent_label: "Clinical Trials Data Agent"
+    description: "Natural-language Agentforce search over the ClinicalTrials.gov REST API v2 studies endpoint."
+    agent_type: "AgentforceServiceAgent"
+
+access:
+    default_agent_user: "your-agent-user@your-org.example.com"
+
+variables:
+    pageToken: mutable string = ""
+        description: "Next page token returned by ClinicalTrials.gov"
+    lastQueryParamsJson: mutable string = ""
+        description: "JSON array of the OAS query parameters used for the previous search"
+    lastStudiesJson: mutable string = ""
+        description: "JSON array of study summaries returned by the previous search"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Route clinical trial questions to the search topic or a standard guardrail topic"
+
+    reasoning:
+        instructions: ->
+            | Route every request about finding, comparing, or understanding clinical trials to clinical_trial_search, even when the request has few or no filters.
+              Route unrelated or unsafe requests to the appropriate guardrail topic.
+        actions:
+            go_to_clinical_trial_search: @utils.transition to @subagent.clinical_trial_search
+            go_to_escalation: @utils.transition to @subagent.escalation
+            go_to_off_topic: @utils.transition to @subagent.off_topic
+            go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
+
+subagent clinical_trial_search:
+    label: "Clinical Trial Search"
+    description: "Translate a user's request into ClinicalTrials.gov OAS parameters and search studies"
+
+    reasoning:
+        instructions: ->
+                        | Always call search_studies before asking the user for more search criteria. Do not route an ordinary underspecified clinical-trial request to a clarification question.
+                            Translate the user's request into a JSON array of {"name":"...","value":"..."} objects.
+                            Use these mappings exactly: disease or condition -> query.cond; treatment or intervention -> query.intr; sponsor or company -> query.spons; location -> query.locn; recruiting or actively recruiting -> filter.overallStatus=RECRUITING. Do not use filter.spons, query.sponsor, or invented status values.
+                            Before calling the action, check that every meaningful user constraint has a corresponding parameter object.
+                            Do not send a fields parameter unless it includes NCTId; the action also guarantees NCTId is retained so every displayed study can be identified.
+                            Always include {"name":"format","value":"json"} and {"name":"pageSize","value":10} unless continuing a previous page. If the user gives only a broad request or provides no usable filters, call the API with these defaults and no additional filters.
+                            If the user provides an NCT number, use filter.ids with that ID and pageSize=1. Never fabricate an NCT number.
+                            For a "show more" request, reuse the previous query parameters and replace pageToken with the returned next page token.
+                            After the action returns, inspect appliedQueryJson and returnedStudyCount. Do not claim a filter was applied unless it appears in appliedQueryJson. Do not say that studies are available without displaying the returned records.
+                            Extract key information from the action output. If the value of study summary or any other attributes of the study longer than 128 words, regenerate the value in less than 128 words before presenting to the user. Make sure the regenerated value covers all the key points in the raw data. 
+                            For multiple studies, render one row per returned study in a compact Markdown table. Omit empty fields instead of inventing values. 
+                            Start with one sentence stating the applied filters and the number of studies returned. Then show the table or numbered records. End with one brief optional refinement question only after the records.
+                            CRITICAL - Do not emit loading, pending, database, or unavailable language. When the action returns success=true and returnedStudyCount > 0, render the actual records immediately from studiesJson. Never defer the response or claim that details are loading, will be displayed later, or are unavailable. If studiesJson is empty or success is false, state that no matches were found instead.
+        actions:
+            search_studies: @actions.search_studies
+                description: "Search ClinicalTrials.gov using a JSON array of OAS /studies query parameters"
+                with queryParamsJson = ...
+                set @variables.lastQueryParamsJson = ...
+                set @variables.lastStudiesJson = @outputs.studiesJson
+                set @variables.pageToken = @outputs.nextPageToken
+
+    actions:
+        search_studies:
+            description: "Executes a read-only ClinicalTrials.gov /studies request with OAS-defined parameters"
+            label: "Search Clinical Trials"
+            target: "apex://ClinicalTrialsSearchStudies"
+            inputs:
+                queryParamsJson: string
+                    label: "ClinicalTrials.gov Query Parameters JSON"
+                    description: "JSON array of name/value objects using the GET /studies OpenAPI parameter names"
+                    is_required: False
+            outputs:
+                studiesJson: string
+                    label: "Study Summaries JSON"
+                    description: "JSON array of returned clinical trial summaries"
+                    filter_from_agent: False
+                nextPageToken: string
+                    label: "Next Page Token"
+                    description: "Opaque token for the next page of the same query"
+                    filter_from_agent: False
+                success: boolean
+                    label: "Success"
+                    description: "Whether the external API call succeeded"
+                    filter_from_agent: False
+                errorMessage: string
+                    label: "Error Message"
+                    description: "Safe user-facing error message when the request fails"
+                    filter_from_agent: False
+                appliedQueryJson: string
+                    label: "Applied Query Parameters JSON"
+                    description: "The normalized parameters actually sent to ClinicalTrials.gov"
+                    filter_from_agent: True
+                returnedStudyCount: object
+                    label: "Returned Study Count"
+                    description: "Number of studies returned in this page"
+                    complex_data_type_name: "lightning__integerType"
+                    filter_from_agent: True
+
+subagent escalation:
+    label: "Escalation"
+    description: "Handle requests that require a qualified clinical professional"
+    reasoning:
+        instructions: ->
+            | Explain that the agent provides public study information only and cannot provide medical advice or make treatment recommendations. Encourage the user to consult a qualified healthcare professional.
+
+subagent off_topic:
+    label: "Off Topic"
+    description: "Handle requests unrelated to clinical trials"
+    reasoning:
+        instructions: ->
+            | Explain that you can help search and summarize ClinicalTrials.gov studies. Ask the user for a clinical trial search request.
+
+subagent ambiguous_question:
+    label: "Ambiguous Question"
+    description: "Clarify an unclear clinical trial request"
+    reasoning:
+        instructions: ->
+            | Use this topic only when the user's message is not a clinical-trial request at all or cannot be interpreted as a request to search or understand a study. Do not use it merely because search filters are missing; clinical_trial_search must run with its default JSON and pageSize first.

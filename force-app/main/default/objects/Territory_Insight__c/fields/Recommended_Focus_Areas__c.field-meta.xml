@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Recommended_Focus_Areas__c</fullName>
+    <description>Prioritised narrative list of concrete actions for the territory manager, each assigned to a named rep with a suggested timeframe.</description>
+    <externalId>false</externalId>
+    <label>Recommended Focus Areas</label>
+    <length>32768</length>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

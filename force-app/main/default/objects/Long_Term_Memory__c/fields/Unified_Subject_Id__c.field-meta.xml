@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Unified_Subject_Id__c</fullName>
+    <label>Unified Subject Id</label>
+    <description>Resolved identity key for the memory subject, used for cross-system retrieval.</description>
+    <inlineHelpText>The normalised, lowercased subject identifier, e.g. user_001 or acct_101. Must match the identity passed by the agent at runtime.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>true</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,262 @@
+system:
+    instructions: "You are a business pre-call assistant for pharmaceutical sales reps. Help users identify an account and generate relevant, personalised talkpoints. Fetch long term memory related to the account and use it silently to enrich your recommendations. Never mention memory, recall, storage, or past sessions to the rep — simply provide better, more relevant guidance."
+    messages:
+        welcome: "Hi! I can help you prepare your next call using account intelligence (with long-term memory context). Who are you visiting today?"
+        error: "Sorry, something went wrong while preparing your call plan."
+
+config:
+    developer_name: "C8_2_long_term_memory_powered_agent"
+    agent_label: "Long Term Memory Powered Agent"
+    description: "Business pre-call agent with coordinator-driven long-term memory handling for recall, memory write-back, and correction."
+    agent_type: "AgentforceServiceAgent"
+
+access:
+    default_agent_user: "your-agent-user@your-org.example.com"
+
+variables:
+    accountId: mutable string = ""
+        description: "Salesforce Account Id resolved from rep input"
+    accountName: mutable string = ""
+        description: "Matched account full name"
+    accountSpecialty: mutable string = ""
+        description: "Matched account specialty"
+    accountConfirmed: mutable boolean = False
+        description: "True after rep confirms account match"
+    lookupFirstName: mutable string = ""
+        description: "Parsed first name for lookup"
+    lookupLastName: mutable string = ""
+        description: "Parsed last name for lookup"
+    lookupSpecialty: mutable string = ""
+        description: "Parsed specialty for lookup"
+    prescriberBehaviourSummary: mutable string = ""
+        description: "Prescriber behavior payload"
+    talkpoints: mutable string = ""
+        description: "Prioritized talkpoints for the visit"
+    memoryContext: mutable string = ""
+        description: "Prompt-safe memory context returned by recall"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Routes incoming rep requests to the workflow coordinator and guardrail flows"
+
+    reasoning:
+        instructions: ->
+            | Route call-planning and account-prep requests to workflow_coordinator.
+              Route explicit handoff requests to escalation.
+        actions:
+            go_to_workflow_coordinator: @utils.transition to @subagent.business_workflow
+            go_to_escalation: @utils.transition to @subagent.escalation
+            go_to_off_topic: @utils.transition to @subagent.off_topic
+            go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
+
+subagent business_workflow:
+    label: "Business Workflow"
+    description: "Pure business pre-call workflow"
+
+    reasoning:
+        instructions: ->
+            # Step 1: Identify account if not already identified.
+            if @variables.accountId == "":
+                | Extract lookup name fields and specialty from the rep message, then call identify_account_id.
+                  If an account is found, present accountName and accountSpecialty and ask for confirmation.
+                  If no account is found, ask for corrected or more detailed account information.
+
+            # Step 2: Confirm account before business recommendation.
+            if @variables.accountId != "" and @variables.accountConfirmed == False:
+                | If rep confirms the account, call confirm_account.
+                  Then continue to the recommendation flow.
+
+
+            # Step 3: Fetch prescriber behaviour and generate prioritised talkpoints.
+            if @variables.accountConfirmed == True and @variables.prescriberBehaviourSummary == "":
+                | Retrieve prescriber behaviour via get_prescriber_behaviour.
+                run @actions.retrieve_long_term_memory
+                    with useCaseKey = "precall"
+                    with queryText = @variables.accountId
+                    set @variables.memoryContext = @outputs.memoryContext
+                | Generate talkpoints via recommend_talkpoint. If memoryContext is non-empty, silently use it to enrich and personalise the
+                  talkpoints. Do not reference memory, past sessions, or prior context to the rep — just present better talkpoints.
+
+        actions:
+            capture_lookup_inputs: @utils.setVariables
+                description: "Extract and store account lookup fields from the rep message"
+                available when @variables.accountId == ""
+                with lookupFirstName = ...
+                with lookupLastName = ...
+                with lookupSpecialty = ...
+
+            identify_account_id: @actions.identify_account_id
+                description: "Resolve Salesforce Account details from rep-provided identity"
+                available when @variables.accountId == ""
+                with firstName = @variables.lookupFirstName
+                with lastName = @variables.lookupLastName
+                with specialty = @variables.lookupSpecialty
+                set @variables.accountId = @outputs.accountId
+                set @variables.accountName = @outputs.accountName
+                set @variables.accountSpecialty = @outputs.accountSpecialty
+
+            confirm_account: @actions.confirm_account
+                description: "Confirm the selected account before recommendation generation"
+                available when @variables.accountId != "" and @variables.accountConfirmed == False
+                with accountId = @variables.accountId
+                set @variables.accountConfirmed = @outputs.accountConfirmed
+
+            get_prescriber_behaviour: @actions.get_prescriber_behaviour
+                description: "Retrieve prescriber behaviour data for confirmed account"
+                available when @variables.accountConfirmed == True and @variables.prescriberBehaviourSummary == ""
+                with accountId = @variables.accountId
+                set @variables.prescriberBehaviourSummary = @outputs.prescriberBehaviourSummary
+
+            recommend_talkpoint: @actions.recommend_talkpoint
+                description: "Generate prioritized talkpoints for rep"
+                available when @variables.prescriberBehaviourSummary != "" and @variables.talkpoints == ""
+                with prescriberBehaviourSummary = @variables.prescriberBehaviourSummary
+                set @variables.talkpoints = @outputs.talkpoints
+
+    actions:
+        identify_account_id:
+            description: "Searches the Account object by name and returns the matched account Id, name, and specialty"
+            label: "Identify Account Id"
+            target: "apex://IdentifyAccountId"
+            inputs:
+                firstName: string
+                    label: "First Name"
+                    description: "First name extracted from the rep message"
+                    is_required: False
+                lastName: string
+                    label: "Last Name"
+                    description: "Last name extracted from the rep message"
+                    is_required: False
+                specialty: string
+                    label: "Specialty"
+                    description: "Medical specialty if mentioned by the rep"
+                    is_required: False
+            outputs:
+                accountId: string
+                    label: "accountId"
+                    description: "Salesforce Account record Id"
+                    filter_from_agent: False
+                accountName: string
+                    label: "accountName"
+                    description: "Full name of the matched account"
+                    filter_from_agent: False
+                accountSpecialty: string
+                    label: "accountSpecialty"
+                    description: "Medical specialty of the matched account"
+                    filter_from_agent: False
+
+        confirm_account:
+            description: "Sets accountConfirmed to True once the rep confirms the matched account"
+            label: "Confirm Account"
+            target: "apex://ConfirmAccount"
+            inputs:
+                accountId: string
+                    label: "Account Id"
+                    description: "Account Id to confirm"
+                    is_required: True
+            outputs:
+                accountConfirmed: boolean
+                    label: "accountConfirmed"
+                    description: "Always returns True on success"
+                    filter_from_agent: False
+
+        get_prescriber_behaviour:
+            description: "Returns mock prescriber behaviour data for the given accountId"
+            label: "Get Prescriber Behaviour"
+            target: "apex://GetPrescriberBehaviour"
+            inputs:
+                accountId: string
+                    label: "Account Id"
+                    description: "Salesforce Account Id"
+                    is_required: True
+            outputs:
+                prescriberBehaviourSummary: string
+                    label: "prescriberBehaviourSummary"
+                    description: "JSON string summarising prescriber behaviour"
+                    filter_from_agent: True
+
+        recommend_talkpoint:
+            description: "Generates prioritised talkpoints from the prescriber behaviour summary"
+            label: "Recommend Talkpoint"
+            target: "apex://RecommendTalkpoint"
+            inputs:
+                prescriberBehaviourSummary: string
+                    label: "Prescriber Behaviour Summary"
+                    description: "JSON prescriber behaviour summary from Get Prescriber Behaviour action"
+                    is_required: True
+            outputs:
+                talkpoints: string
+                    label: "talkpoints"
+                    description: "JSON array of prioritised talkpoints with priority, topic, rationale, and suggestedOpener fields"
+                    filter_from_agent: False
+
+        retrieve_long_term_memory:
+            description: "Recalls relevant long-term memories for the current session. Context is derived automatically from the running user."
+            label: "Retrieve Long Term Memory"
+            target: "apex://RetrieveLongTermMemory"
+            inputs:
+                queryText: string
+                    label: "Query Text"
+                    description: "Natural language query describing what to recall for this session"
+                    is_required: False
+                useCaseKey: string
+                    label: "Use Case Key"
+                    description: "Static workflow identifier wired by the agent author, e.g. precall"
+                    is_required: False
+                contextJson: string
+                    label: "Context JSON"
+                    description: "Advanced override for org, identity, and scope. Leave blank to use session-derived context."
+                    is_required: False
+            outputs:
+                retrievalId: string
+                    label: "retrievalId"
+                    description: "Retrieval execution id"
+                    filter_from_agent: False
+                memoryContext: string
+                    label: "memoryContext"
+                    description: "Prompt-safe memory context"
+                    filter_from_agent: False
+                memoriesJson: string
+                    label: "memoriesJson"
+                    description: "JSON array of ranked memory records"
+                    filter_from_agent: True
+                retrievalMetricsJson: string
+                    label: "retrievalMetricsJson"
+                    description: "JSON object with retrieval metrics"
+                    filter_from_agent: True
+                conflictFlagsJson: string
+                    label: "conflictFlagsJson"
+                    description: "JSON array with conflict notices"
+                    filter_from_agent: True
+
+subagent escalation:
+    label: "Escalation"
+    description: "Escalation flow"
+
+    reasoning:
+        instructions: ->
+            | If a user explicitly asks to transfer to a live agent, escalate the conversation.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Escalate to a live agent"
+
+subagent off_topic:
+    label: "Off Topic"
+    description: "Redirect conversation back to pre-call planning"
+
+    reasoning:
+        instructions: ->
+            | Politely redirect to pre-call planning tasks such as account lookup, memory-aware preparation, and talkpoint generation.
+
+subagent ambiguous_question:
+    label: "Ambiguous Question"
+    description: "Clarify missing information for business workflow"
+
+    reasoning:
+        instructions: ->
+            | Ask a concise clarifying question to obtain account name, specialty, or call objective.

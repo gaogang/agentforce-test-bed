@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scope_Key__c</fullName>
+    <label>Scope Key</label>
+    <description>Concrete instance key within the scope, e.g. the user id or account id.</description>
+    <inlineHelpText>Paired with Scope Type to uniquely bound retrieval. For personal scope this is typically the same as Unified Subject Id.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

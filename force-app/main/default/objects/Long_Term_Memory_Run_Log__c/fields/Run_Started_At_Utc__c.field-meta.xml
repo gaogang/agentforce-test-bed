@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Run_Started_At_Utc__c</fullName>
+    <label>Run Started At Utc</label>
+    <description>Timestamp when the workflow run started.</description>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>

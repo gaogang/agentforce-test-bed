@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <label>Status</label>
+    <description>Execution status of the daily long-term memory generation run.</description>
+    <inlineHelpText>Use success when the run completes end-to-end and watermark can advance.</inlineHelpText>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>success</fullName>
+                <default>true</default>
+                <label>success</label>
+            </value>
+            <value>
+                <fullName>partial_success</fullName>
+                <default>false</default>
+                <label>partial_success</label>
+            </value>
+            <value>
+                <fullName>failed</fullName>
+                <default>false</default>
+                <label>failed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

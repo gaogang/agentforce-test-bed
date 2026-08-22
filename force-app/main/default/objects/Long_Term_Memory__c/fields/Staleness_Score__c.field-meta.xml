@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Staleness_Score__c</fullName>
+    <label>Staleness Score</label>
+    <description>Derived signal indicating likely decay in usefulness. Subtracts from the final rank score. Range 0 to 1.</description>
+    <inlineHelpText>Higher values reduce ranking priority. Episodic memories accumulate staleness faster than semantic ones.</inlineHelpText>
+    <type>Number</type>
+    <precision>4</precision>
+    <scale>3</scale>
+    <required>false</required>
+</CustomField>

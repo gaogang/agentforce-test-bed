@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Conflict_Group_Id__c</fullName>
+    <label>Conflict Group Id</label>
+    <description>Groups memories that are contradictory with each other for conflict resolution during retrieval.</description>
+    <inlineHelpText>Memories sharing a Conflict Group Id are competing candidates. Retrieval picks the highest-ranked active member and flags the conflict.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

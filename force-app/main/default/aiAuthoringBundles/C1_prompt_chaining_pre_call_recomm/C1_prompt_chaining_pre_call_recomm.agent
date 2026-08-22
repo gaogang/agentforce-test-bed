@@ -1,0 +1,259 @@
+system:
+    instructions: "You are a pre-call recommendation assistant for pharmaceutical sales representatives. Help reps prepare for customer visits by identifying the account, confirming the match, and generating prioritised talkpoints based on prescriber behaviour data."
+    messages:
+        welcome: "Hi! I can help you prepare for your next sales call. Who are you visiting today?"
+        error: "Sorry, something went wrong. Please try again or contact your administrator."
+
+config:
+    developer_name: "C1_prompt_chaining_pre_call_recomm"
+    agent_label: "C1 Prompt Chaining Pre Call Recommendation"
+    description: "Pharma pre-call recommendation agent using prompt chaining: resolves account, confirms match, retrieves prescriber behaviour, then generates prioritised talkpoints."
+    agent_type: "AgentforceServiceAgent"
+
+access:
+    default_agent_user: "your-agent-user@your-org.example.com"
+
+variables:
+    EndUserId: linked string
+        source: @MessagingSession.MessagingEndUserId
+        description: "MessagingEndUser Id"
+    RoutableId: linked string
+        source: @MessagingSession.Id
+        description: "MessagingSession Id"
+    ContactId: linked string
+        source: @MessagingEndUser.ContactId
+        description: "MessagingEndUser ContactId"
+    EndUserLanguage: linked string
+        source: @MessagingSession.EndUserLanguage
+        description: "MessagingSession EndUserLanguage"
+    accountId: mutable string = ""
+        description: "Salesforce Account Id resolved by the Identify Account Id action"
+    accountName: mutable string = ""
+        description: "Full name of the matched account, e.g. Dr. Sarah Chen"
+    accountSpecialty: mutable string = ""
+        description: "Medical specialty of the matched account, e.g. Cardiology"
+    accountConfirmed: mutable boolean = False
+        description: "Set to True once the rep confirms the matched account"
+    prescriberBehaviourSummary: mutable string = ""
+        description: "JSON summary of prescriber behaviour data returned by Get Prescriber Behaviour action"
+    talkpoints: mutable string = ""
+        description: "Prioritised talkpoints returned by Recommend Talkpoint action"
+    lookupFirstName: mutable string = ""
+        description: "First name extracted from the rep message for account lookup"
+    lookupLastName: mutable string = ""
+        description: "Last name extracted from the rep message for account lookup"
+    lookupSpecialty: mutable string = ""
+        description: "Specialty extracted from the rep message for account lookup"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+    description: "Welcome the rep and route to the Precall Recommendation subagent or standard guardrail subagents"
+
+    reasoning:
+        instructions: ->
+            | Select the tool that best matches the rep's message and conversation history. If it is unclear, make your best guess.
+        actions:
+            go_to_precall_recommendation: @utils.transition to @subagent.precall_recommendation
+                description: "Rep asks for call prep, talkpoints, or account briefing for a named customer"
+            go_to_escalation: @utils.transition to @subagent.escalation
+            go_to_off_topic: @utils.transition to @subagent.off_topic
+            go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
+
+subagent precall_recommendation:
+    label: "Precall Recommendation"
+    description: "End-to-end pre-call preparation: identify account, confirm with rep, retrieve prescriber behaviour, generate talkpoints"
+
+    reasoning:
+        instructions: ->
+            # Step 1 — Identify the account if we do not yet have an accountId
+            if @variables.accountId == "":
+                | First capture structured lookup inputs from the rep message, then call the identify_account_id action.
+                  Always pass {!@variables.lookupFirstName}, {!@variables.lookupLastName}, and {!@variables.lookupSpecialty} to that action.
+                  If the rep gives a full name in one phrase, split it into first and last name.
+                  If you only have one token, treat it as lastName and leave firstName empty.
+                  After receiving the result, check whether an account was found:
+                  - If the action returned a non-empty accountId, present the match and ask for confirmation:
+                    "I found {!@variables.accountName}, {!@variables.accountSpecialty}. Shall I pull up their prescriber profile and generate talkpoints?"
+                  - If the action returned no accountId (accountId is empty or null), do NOT ask about pulling up a profile.
+                    Instead say: "I couldn't find an account matching that name. Could you double-check the spelling or provide more details such as their last name or specialty?"
+                  Do NOT use the show_command tool. Always compose your response as direct text.
+
+            # Step 2 — Account matched, waiting for rep confirmation
+            if @variables.accountId != "" and @variables.accountConfirmed == False:
+                | You have identified the account as {!@variables.accountName} ({!@variables.accountSpecialty}).
+                  Evaluate the rep's latest message before responding:
+                  - If the rep confirms (for example: "yes", "y", "confirm", "go ahead", "proceed"), immediately call the {!@actions.confirm_account} action.
+                  - After confirmation succeeds, immediately continue in the SAME turn by calling {!@actions.get_prescriber_behaviour} and then {!@actions.recommend_talkpoint}.
+                  - Do NOT repeat the confirmation question when the rep has already confirmed.
+                  If the rep says no or wants a different account, call the {!@actions.identify_account_id} action again with the corrected name.
+                  If the rep message is not a clear yes/no, ask:
+                  "I found {!@variables.accountName}, {!@variables.accountSpecialty}. Shall I pull up their prescriber profile and generate talkpoints?"
+                  Do NOT use the show_command tool. Always compose your response as direct text.
+
+            # Step 3 — Account confirmed, fetch prescriber behaviour
+            if @variables.accountConfirmed == True and @variables.prescriberBehaviourSummary == "":
+                | The rep has confirmed the account. Use the {!@actions.get_prescriber_behaviour} action now.
+                  Pass the accountId from @variables.accountId.
+                  After receiving the result, immediately call the {!@actions.recommend_talkpoint} action.
+                  Do NOT pause to show the prescriber data to the rep — proceed directly to talkpoint generation.
+                  Do NOT use the show_command tool. Always compose your response as direct text.
+
+            # Step 4 — Talkpoints ready, present to rep
+            if @variables.talkpoints != "":
+                | Present the talkpoints to the rep in a clear, prioritised list.
+                  For each talkpoint include the priority number, topic, rationale, and suggestedOpener values
+                  from the talkpoints output. Use the exact values returned — do NOT paraphrase.
+                  Format as a numbered list ordered by priority.
+                  End with: "Good luck with your visit with {!@variables.accountName}!"
+                  Do NOT call any action again — you already have the talkpoints.
+                  Do NOT use the show_command tool. Always compose your response as direct text.
+
+        actions:
+            capture_lookup_inputs: @utils.setVariables
+                description: "Extract and store first name, last name, and specialty from the rep message"
+                available when @variables.accountId == ""
+                with lookupFirstName = ...
+                with lookupLastName = ...
+                with lookupSpecialty = ...
+
+            identify_account_id: @actions.identify_account_id
+                description: "Resolve a Salesforce Account from rep-provided name or details"
+                available when @variables.accountId == ""
+                with firstName = @variables.lookupFirstName
+                with lastName = @variables.lookupLastName
+                with specialty = @variables.lookupSpecialty
+                set @variables.accountId = @outputs.accountId
+                set @variables.accountName = @outputs.accountName
+                set @variables.accountSpecialty = @outputs.accountSpecialty
+
+            confirm_account: @actions.confirm_account
+                description: "Rep has confirmed the matched account — mark it as confirmed"
+                available when @variables.accountId != "" and @variables.accountConfirmed == False
+                with accountId = @variables.accountId
+                set @variables.accountConfirmed = @outputs.accountConfirmed
+
+            get_prescriber_behaviour: @actions.get_prescriber_behaviour
+                description: "Retrieve prescriber behaviour data for the confirmed account"
+                available when @variables.accountConfirmed == True and @variables.prescriberBehaviourSummary == ""
+                with accountId = @variables.accountId
+                set @variables.prescriberBehaviourSummary = @outputs.prescriberBehaviourSummary
+
+            recommend_talkpoint: @actions.recommend_talkpoint
+                description: "Generate prioritised talkpoints from prescriber behaviour data"
+                available when @variables.prescriberBehaviourSummary != "" and @variables.talkpoints == ""
+                with prescriberBehaviourSummary = @variables.prescriberBehaviourSummary
+                set @variables.talkpoints = @outputs.talkpoints
+
+    actions:
+        identify_account_id:
+            description: "Searches the Account object by name and returns the matched account Id, name, and specialty"
+            label: "Identify Account Id"
+            target: "apex://IdentifyAccountId"
+            inputs:
+                firstName: string
+                    label: "First Name"
+                    description: "First name extracted from the rep's message"
+                    is_required: False
+                lastName: string
+                    label: "Last Name"
+                    description: "Last name extracted from the rep's message"
+                    is_required: False
+                specialty: string
+                    label: "Specialty"
+                    description: "Medical specialty if mentioned by the rep"
+                    is_required: False
+            outputs:
+                accountId: string
+                    label: "accountId"
+                    description: "Salesforce Account record Id"
+                    filter_from_agent: False
+                accountName: string
+                    label: "accountName"
+                    description: "Full name of the matched account"
+                    filter_from_agent: False
+                accountSpecialty: string
+                    label: "accountSpecialty"
+                    description: "Medical specialty of the matched account"
+                    filter_from_agent: False
+
+        confirm_account:
+            description: "Sets accountConfirmed to True once the rep confirms the matched account"
+            label: "Confirm Account"
+            target: "apex://ConfirmAccount"
+            inputs:
+                accountId: string
+                    label: "Account Id"
+                    description: "Account Id to confirm"
+                    is_required: True
+            outputs:
+                accountConfirmed: boolean
+                    label: "accountConfirmed"
+                    description: "Always returns True on success"
+                    filter_from_agent: False
+
+        get_prescriber_behaviour:
+            description: "Returns mock prescriber behaviour data for the given accountId"
+            label: "Get Prescriber Behaviour"
+            target: "apex://GetPrescriberBehaviour"
+            inputs:
+                accountId: string
+                    label: "Account Id"
+                    description: "Salesforce Account Id"
+                    is_required: True
+            outputs:
+                prescriberBehaviourSummary: string
+                    label: "prescriberBehaviourSummary"
+                    description: "JSON string summarising prescriber behaviour"
+                    filter_from_agent: True
+
+        recommend_talkpoint:
+            description: "Generates prioritised talkpoints from the prescriber behaviour summary"
+            label: "Recommend Talkpoint"
+            target: "apex://RecommendTalkpoint"
+            inputs:
+                prescriberBehaviourSummary: string
+                    label: "Prescriber Behaviour Summary"
+                    description: "JSON prescriber behaviour summary from Get Prescriber Behaviour action"
+                    is_required: True
+            outputs:
+                talkpoints: string
+                    label: "talkpoints"
+                    description: "JSON array of prioritised talkpoints with priority, topic, rationale, and suggestedOpener fields"
+                    filter_from_agent: False
+
+subagent escalation:
+    label: "Escalation"
+    description: "Handles requests from users who want to transfer or escalate their conversation to a live human agent."
+
+    reasoning:
+        instructions: ->
+            | If a user explicitly asks to transfer to a live agent, escalate the conversation.
+              If escalation to a live agent fails for any reason, acknowledge the issue and ask the user whether they would like to log a support case instead.
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Call this tool to escalate to a human agent."
+
+subagent off_topic:
+    label: "Off Topic"
+    description: "Redirect conversation to relevant subagents when user request goes off-topic"
+
+    reasoning:
+        instructions: ->
+            | Your job is to redirect the conversation to relevant subagents politely and succinctly.
+              The user request is off-topic. Only respond to general greetings and questions about your capabilities.
+              Redirect the conversation by asking how you can help with pre-call preparation.
+
+subagent ambiguous_question:
+    label: "Ambiguous Question"
+    description: "Redirect conversation to relevant subagents when user request is too ambiguous"
+
+    reasoning:
+        instructions: ->
+            | Your job is to help the rep provide clearer, more focused requests.
+              Do not answer ambiguous questions. Politely guide the rep to provide more specific details,
+              such as the customer's name and specialty.

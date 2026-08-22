@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Superseded_By_Memory_Id__c</fullName>
+    <label>Superseded By Memory Id</label>
+    <description>Name field value (Memory Key) of the newer memory record that replaced this one.</description>
+    <inlineHelpText>Set when this memory is marked Superseded by a newer write. Allows forward traversal of the contradiction chain.</inlineHelpText>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <externalId>false</externalId>
+    <unique>false</unique>
+</CustomField>

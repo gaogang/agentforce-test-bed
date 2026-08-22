@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Watermark_To_Utc__c</fullName>
+    <label>Watermark To Utc</label>
+    <description>Inclusive upper bound timestamp for records included in the run.</description>
+    <inlineHelpText>Messages with timestamp less than or equal to this value are included.</inlineHelpText>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>
