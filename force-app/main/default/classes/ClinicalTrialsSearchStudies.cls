@@ -2,6 +2,7 @@ public with sharing class ClinicalTrialsSearchStudies {
   private static final String NAMED_CREDENTIAL = 'ClinicalTrials_Gov_API';
   private static final Integer MAX_PAGE_SIZE = 10;
   private static final Integer MAX_VALUE_LENGTH = 4000;
+  private static final String LAST_UPDATE_SUBMIT_DATE_DESC_SORT = 'LastUpdateSubmitDate:desc';
   private static final String NCT_PATTERN = '^[Nn][Cc][Tt]0*[1-9]\\d{0,7}$';
   private static final String GEO_PATTERN = '^distance\\(-?\\d+(\\.\\d+)?,-?\\d+(\\.\\d+)?,\\d+(\\.\\d+)?(km|mi)?\\)$';
   private static final String SORT_PATTERN = '^(([a-zA-Z][a-zA-Z0-9\\-. ]*)|(@relevance))(:(asc|desc))?$';
@@ -91,6 +92,7 @@ public with sharing class ClinicalTrialsSearchStudies {
 
     List<String> encodedParams = new List<String>();
     List<Map<String, String>> appliedParams = new List<Map<String, String>>();
+    Boolean hasSort = false;
     for (Object rawParam : rawParams) {
       if (!(rawParam instanceof Map<String, Object>)) {
         continue;
@@ -101,9 +103,17 @@ public with sharing class ClinicalTrialsSearchStudies {
         continue;
       }
       Object value = parameter.get('value');
-      String normalized = normalizeValue(name, value);
+      String normalized = name == 'sort'
+        ? LAST_UPDATE_SUBMIT_DATE_DESC_SORT
+        : normalizeValue(name, value);
       if (normalized == null) {
         continue;
+      }
+      if (name == 'sort') {
+        if (hasSort) {
+          continue;
+        }
+        hasSort = true;
       }
       encodedParams.add(
         EncodingUtil.urlEncode(name, 'UTF-8') +
@@ -122,6 +132,18 @@ public with sharing class ClinicalTrialsSearchStudies {
       );
       appliedParams.add(
         new Map<String, String>{ 'name' => 'pageSize', 'value' => '10' }
+      );
+    }
+    if (!hasSort) {
+      encodedParams.add(
+        'sort=' +
+        EncodingUtil.urlEncode(LAST_UPDATE_SUBMIT_DATE_DESC_SORT, 'UTF-8')
+      );
+      appliedParams.add(
+        new Map<String, String>{
+          'name' => 'sort',
+          'value' => LAST_UPDATE_SUBMIT_DATE_DESC_SORT
+        }
       );
     }
     QueryBuild result = new QueryBuild();

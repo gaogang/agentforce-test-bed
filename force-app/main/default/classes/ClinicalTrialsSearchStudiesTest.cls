@@ -42,10 +42,38 @@ private class ClinicalTrialsSearchStudiesTest {
     System.assert(result.appliedQueryJson.contains('filter.overallStatus'));
     System.assertEquals(1, result.returnedStudyCount);
     System.assertEquals('next-token', result.nextPageToken);
+    System.assert(
+      result.appliedQueryJson.contains('LastUpdateSubmitDate:desc')
+    );
     System.assert(lastEndpoint.contains('query.cond=lung+cancer'));
     System.assert(lastEndpoint.contains('filter.overallStatus=RECRUITING'));
     System.assert(lastEndpoint.contains('pageSize=10'));
+    System.assert(lastEndpoint.contains('sort=LastUpdateSubmitDate%3Adesc'));
     System.assert(!lastEndpoint.contains('unknown'));
+  }
+
+  @IsTest
+  static void forcesLastUpdateSubmitDateDescendingSort() {
+    Test.setMock(
+      HttpCalloutMock.class,
+      new ClinicalTrialsMock(200, '{"studies":[]}')
+    );
+    ClinicalTrialsSearchStudies.Request request = new ClinicalTrialsSearchStudies.Request();
+    request.queryParamsJson = '[{"name":"query.cond","value":"asthma"},{"name":"sort","value":"@relevance"}]';
+
+    Test.startTest();
+    ClinicalTrialsSearchStudies.Result result = ClinicalTrialsSearchStudies.search(
+      new List<ClinicalTrialsSearchStudies.Request>{ request }
+    )[0];
+    Test.stopTest();
+
+    System.assertEquals(true, result.success);
+    System.assert(
+      result.appliedQueryJson.contains('LastUpdateSubmitDate:desc')
+    );
+    System.assert(!result.appliedQueryJson.contains('@relevance'));
+    System.assert(lastEndpoint.contains('sort=LastUpdateSubmitDate%3Adesc'));
+    System.assert(!lastEndpoint.contains('@relevance'));
   }
 
   @IsTest
