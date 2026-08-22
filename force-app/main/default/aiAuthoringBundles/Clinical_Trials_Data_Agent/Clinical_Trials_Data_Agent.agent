@@ -11,7 +11,7 @@ config:
     agent_type: "AgentforceServiceAgent"
 
 access:
-    default_agent_user: "your-agent-user@your-org.example.com"
+    default_agent_user: "draft_precall@00dwi00000c4mut1316317736.ext"
 variables:
     pageToken: mutable string = ""
         description: "Next page token returned by ClinicalTrials.gov"
@@ -55,6 +55,7 @@ subagent clinical_trial_search:
                             For a "show more" request, reuse the previous query parameters and replace pageToken with the returned next page token.
                             After the action returns, inspect appliedQueryJson and returnedStudyCount. Do not claim a filter was applied unless it appears in appliedQueryJson. Do not say that studies are available without displaying the returned records.
                             Extract key information from the action output. If the value of study summary or any other attributes of the study longer than 128 words, regenerate the value in less than 128 words before presenting to the user. Make sure the regenerated value covers all the key points in the raw data. 
+                            Each study summary includes startDate, primaryCompletionDate, completionDate, studyFirstPostDate, and lastUpdatePostDate. Always surface the study's start date and completion date (or primary completion date if completion date is absent) alongside the other key details; omit a date only if it is empty in the data.
                             For multiple studies, render one row per returned study in a compact Markdown table. Omit empty fields instead of inventing values. 
                             Start with one sentence stating the applied filters and the number of studies returned. Then show the table or numbered records. End with one brief optional refinement question only after the records.
                             CRITICAL - Do not emit loading, pending, database, or unavailable language. When the action returns success=true and returnedStudyCount > 0, render the actual records immediately from studiesJson. Never defer the response or claim that details are loading, will be displayed later, or are unavailable. If studiesJson is empty or success is false, state that no matches were found instead.

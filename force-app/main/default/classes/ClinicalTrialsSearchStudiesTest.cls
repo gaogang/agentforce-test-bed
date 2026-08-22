@@ -8,7 +8,7 @@ private class ClinicalTrialsSearchStudiesTest {
       HttpCalloutMock.class,
       new ClinicalTrialsMock(
         200,
-        '{"studies":[{"protocolSection":{"identificationModule":{"nctId":"NCT00000001","briefTitle":"Lung cancer study"},"statusModule":{"overallStatus":"RECRUITING"},"designModule":{"phases":["PHASE2"],"studyType":"INTERVENTIONAL"},"sponsorCollaboratorsModule":{"leadSponsor":{"name":"Example Pharma"}},"conditionsModule":{"conditions":["Lung cancer"]},"eligibilityModule":{"eligibilityCriteria":"Adults eligible"},"contactsLocationsModule":{"locations":[{"facility":"General Hospital","city":"Boston","state":"Massachusetts","country":"United States"}]},"descriptionModule":{"briefSummary":"A study summary"}},"hasResults":false}],"nextPageToken":"next-token"}'
+        '{"studies":[{"protocolSection":{"identificationModule":{"nctId":"NCT00000001","briefTitle":"Lung cancer study"},"statusModule":{"overallStatus":"RECRUITING","startDateStruct":{"date":"2023-01-15","type":"ACTUAL"},"primaryCompletionDateStruct":{"date":"2025-06-30","type":"ESTIMATED"},"completionDateStruct":{"date":"2025-12-31","type":"ESTIMATED"},"studyFirstPostDateStruct":{"date":"2022-11-01","type":"ACTUAL"},"lastUpdatePostDateStruct":{"date":"2023-02-01","type":"ACTUAL"}},"designModule":{"phases":["PHASE2"],"studyType":"INTERVENTIONAL"},"sponsorCollaboratorsModule":{"leadSponsor":{"name":"Example Pharma"}},"conditionsModule":{"conditions":["Lung cancer"]},"eligibilityModule":{"eligibilityCriteria":"Adults eligible"},"contactsLocationsModule":{"locations":[{"facility":"General Hospital","city":"Boston","state":"Massachusetts","country":"United States"}]},"descriptionModule":{"briefSummary":"A study summary"}},"hasResults":false}],"nextPageToken":"next-token"}'
       )
     );
     ClinicalTrialsSearchStudies.Request request = new ClinicalTrialsSearchStudies.Request();
@@ -33,6 +33,11 @@ private class ClinicalTrialsSearchStudiesTest {
       )
     );
     System.assert(result.studiesJson.contains('A study summary'));
+    System.assert(result.studiesJson.contains('2023-01-15'));
+    System.assert(result.studiesJson.contains('2025-06-30'));
+    System.assert(result.studiesJson.contains('2025-12-31'));
+    System.assert(result.studiesJson.contains('2022-11-01'));
+    System.assert(result.studiesJson.contains('2023-02-01'));
     System.assert(result.appliedQueryJson.contains('query.cond'));
     System.assert(result.appliedQueryJson.contains('filter.overallStatus'));
     System.assertEquals(1, result.returnedStudyCount);

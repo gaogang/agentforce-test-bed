@@ -8,7 +8,7 @@ config:
     agent_type: "AgentforceServiceAgent"
 
 access:
-    default_agent_user: "your-agent-user@your-org.example.com"
+    default_agent_user: "draft_precall@00dwi00000c4mut1316317736.ext"
 variables:
     territoryId: mutable string = ""
         description: "Territory2 record Id injected by the scheduled trigger"

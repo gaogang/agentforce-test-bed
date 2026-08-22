@@ -280,7 +280,18 @@ public with sharing class ClinicalTrialsSearchStudies {
       ),
       'locations' => locationValue(contactsLocations.get('locations')),
       'briefSummary' => scalarValue(description.get('briefSummary')),
-      'hasResults' => study.get('hasResults')
+      'hasResults' => study.get('hasResults'),
+      'startDate' => dateStructValue(status.get('startDateStruct')),
+      'primaryCompletionDate' => dateStructValue(
+        status.get('primaryCompletionDateStruct')
+      ),
+      'completionDate' => dateStructValue(status.get('completionDateStruct')),
+      'studyFirstPostDate' => dateStructValue(
+        status.get('studyFirstPostDateStruct')
+      ),
+      'lastUpdatePostDate' => dateStructValue(
+        status.get('lastUpdatePostDateStruct')
+      )
     };
   }
 
@@ -323,6 +334,10 @@ public with sharing class ClinicalTrialsSearchStudies {
       return scalarValue(((List<Object>) value)[0]);
     }
     return scalarValue(value);
+  }
+
+  private static String dateStructValue(Object value) {
+    return scalarValue(mapValue(value).get('date'));
   }
 
   private static String locationValue(Object value) {
