@@ -12,7 +12,6 @@ config:
 
 access:
     default_agent_user: "your-agent-user@your-org.example.com"
-
 variables:
     EndUserId: linked string
         source: @MessagingSession.MessagingEndUserId

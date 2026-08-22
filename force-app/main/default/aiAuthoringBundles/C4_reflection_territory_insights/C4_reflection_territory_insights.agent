@@ -9,7 +9,6 @@ config:
 
 access:
     default_agent_user: "your-agent-user@your-org.example.com"
-
 variables:
     territoryId: mutable string = ""
         description: "Territory2 record Id injected by the scheduled trigger"

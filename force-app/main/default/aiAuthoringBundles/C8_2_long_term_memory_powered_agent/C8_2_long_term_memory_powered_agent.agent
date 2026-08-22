@@ -12,7 +12,6 @@ config:
 
 access:
     default_agent_user: "your-agent-user@your-org.example.com"
-
 variables:
     accountId: mutable string = ""
         description: "Salesforce Account Id resolved from rep input"

@@ -12,7 +12,6 @@ config:
 
 access:
     default_agent_user: "your-agent-user@your-org.example.com"
-
 variables:
     pageToken: mutable string = ""
         description: "Next page token returned by ClinicalTrials.gov"
