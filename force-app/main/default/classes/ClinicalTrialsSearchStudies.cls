@@ -93,6 +93,7 @@ public with sharing class ClinicalTrialsSearchStudies {
     List<String> encodedParams = new List<String>();
     List<Map<String, String>> appliedParams = new List<Map<String, String>>();
     Boolean hasSort = false;
+    Boolean hasCountTotal = false;
     for (Object rawParam : rawParams) {
       if (!(rawParam instanceof Map<String, Object>)) {
         continue;
@@ -114,6 +115,12 @@ public with sharing class ClinicalTrialsSearchStudies {
           continue;
         }
         hasSort = true;
+      }
+      if (name == 'countTotal') {
+        if (hasCountTotal) {
+          continue;
+        }
+        hasCountTotal = true;
       }
       encodedParams.add(
         EncodingUtil.urlEncode(name, 'UTF-8') +
@@ -146,6 +153,12 @@ public with sharing class ClinicalTrialsSearchStudies {
         }
       );
     }
+    if (!hasCountTotal) {
+      encodedParams.add('countTotal=true');
+      appliedParams.add(
+        new Map<String, String>{ 'name' => 'countTotal', 'value' => 'true' }
+      );
+    }
     QueryBuild result = new QueryBuild();
     result.queryString = '?' + String.join(encodedParams, '&');
     result.appliedQueryJson = JSON.serialize(appliedParams);
@@ -164,7 +177,7 @@ public with sharing class ClinicalTrialsSearchStudies {
       return value == 'json' ? value : 'json';
     }
     if (name == 'countTotal') {
-      return 'false';
+      return 'true';
     }
     if (name == 'pageSize') {
       Integer requestedSize;
@@ -263,6 +276,7 @@ public with sharing class ClinicalTrialsSearchStudies {
     result.studiesJson = JSON.serialize(summaries);
     result.returnedStudyCount = summaries.size();
     result.nextPageToken = scalarValue(payload.get('nextPageToken'));
+    result.totalCount = integerValue(payload.get('totalCount'));
     return result;
   }
 
@@ -339,6 +353,17 @@ public with sharing class ClinicalTrialsSearchStudies {
 
   private static String scalarValue(Object value) {
     return value == null ? null : String.valueOf(value);
+  }
+
+  private static Integer integerValue(Object value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return Integer.valueOf(value);
+    } catch (Exception ex) {
+      return null;
+    }
   }
 
   private static Boolean matchesPattern(String value, String pattern) {
@@ -445,6 +470,12 @@ public with sharing class ClinicalTrialsSearchStudies {
       description='Number of studies returned in this page'
     )
     public Integer returnedStudyCount;
+
+    @InvocableVariable(
+      label='Total Count'
+      description='Total number of studies matching the query across all pages'
+    )
+    public Integer totalCount;
   }
 
   private class QueryBuild {

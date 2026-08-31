@@ -54,6 +54,7 @@ subagent clinical_trial_search:
                             If the user provides an NCT number, use filter.ids with that ID and pageSize=1. Never fabricate an NCT number.
                             For a "show more" request, reuse the previous query parameters and replace pageToken with the returned next page token.
                             After the action returns, inspect appliedQueryJson and returnedStudyCount. Do not claim a filter was applied unless it appears in appliedQueryJson. Do not say that studies are available without displaying the returned records.
+                            When totalCount is present, state the total number of matching studies (not just the number shown on this page) in the summary sentence, and mention that more results are available if totalCount exceeds returnedStudyCount.
                             Extract key information from the action output. If the value of study summary or any other attributes of the study longer than 128 words, regenerate the value in less than 128 words before presenting to the user. Make sure the regenerated value covers all the key points in the raw data. 
                             Each study summary includes startDate, primaryCompletionDate, completionDate, studyFirstPostDate, and lastUpdatePostDate. Always surface the study's start date and completion date (or primary completion date if completion date is absent) alongside the other key details; omit a date only if it is empty in the data.
                             For multiple studies, render one row per returned study in a compact Markdown table. Omit empty fields instead of inventing values. 
@@ -101,6 +102,11 @@ subagent clinical_trial_search:
                 returnedStudyCount: object
                     label: "Returned Study Count"
                     description: "Number of studies returned in this page"
+                    complex_data_type_name: "lightning__integerType"
+                    filter_from_agent: True
+                totalCount: object
+                    label: "Total Count"
+                    description: "Total number of studies matching the query across all pages"
                     complex_data_type_name: "lightning__integerType"
                     filter_from_agent: True
 

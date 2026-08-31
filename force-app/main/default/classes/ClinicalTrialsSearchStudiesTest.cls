@@ -8,7 +8,7 @@ private class ClinicalTrialsSearchStudiesTest {
       HttpCalloutMock.class,
       new ClinicalTrialsMock(
         200,
-        '{"studies":[{"protocolSection":{"identificationModule":{"nctId":"NCT00000001","briefTitle":"Lung cancer study"},"statusModule":{"overallStatus":"RECRUITING","startDateStruct":{"date":"2023-01-15","type":"ACTUAL"},"primaryCompletionDateStruct":{"date":"2025-06-30","type":"ESTIMATED"},"completionDateStruct":{"date":"2025-12-31","type":"ESTIMATED"},"studyFirstPostDateStruct":{"date":"2022-11-01","type":"ACTUAL"},"lastUpdatePostDateStruct":{"date":"2023-02-01","type":"ACTUAL"}},"designModule":{"phases":["PHASE2"],"studyType":"INTERVENTIONAL"},"sponsorCollaboratorsModule":{"leadSponsor":{"name":"Example Pharma"}},"conditionsModule":{"conditions":["Lung cancer"]},"eligibilityModule":{"eligibilityCriteria":"Adults eligible"},"contactsLocationsModule":{"locations":[{"facility":"General Hospital","city":"Boston","state":"Massachusetts","country":"United States"}]},"descriptionModule":{"briefSummary":"A study summary"}},"hasResults":false}],"nextPageToken":"next-token"}'
+        '{"studies":[{"protocolSection":{"identificationModule":{"nctId":"NCT00000001","briefTitle":"Lung cancer study"},"statusModule":{"overallStatus":"RECRUITING","startDateStruct":{"date":"2023-01-15","type":"ACTUAL"},"primaryCompletionDateStruct":{"date":"2025-06-30","type":"ESTIMATED"},"completionDateStruct":{"date":"2025-12-31","type":"ESTIMATED"},"studyFirstPostDateStruct":{"date":"2022-11-01","type":"ACTUAL"},"lastUpdatePostDateStruct":{"date":"2023-02-01","type":"ACTUAL"}},"designModule":{"phases":["PHASE2"],"studyType":"INTERVENTIONAL"},"sponsorCollaboratorsModule":{"leadSponsor":{"name":"Example Pharma"}},"conditionsModule":{"conditions":["Lung cancer"]},"eligibilityModule":{"eligibilityCriteria":"Adults eligible"},"contactsLocationsModule":{"locations":[{"facility":"General Hospital","city":"Boston","state":"Massachusetts","country":"United States"}]},"descriptionModule":{"briefSummary":"A study summary"}},"hasResults":false}],"nextPageToken":"next-token","totalCount":42}'
       )
     );
     ClinicalTrialsSearchStudies.Request request = new ClinicalTrialsSearchStudies.Request();
@@ -42,6 +42,7 @@ private class ClinicalTrialsSearchStudiesTest {
     System.assert(result.appliedQueryJson.contains('filter.overallStatus'));
     System.assertEquals(1, result.returnedStudyCount);
     System.assertEquals('next-token', result.nextPageToken);
+    System.assertEquals(42, result.totalCount);
     System.assert(
       result.appliedQueryJson.contains('LastUpdateSubmitDate:desc')
     );
@@ -49,6 +50,7 @@ private class ClinicalTrialsSearchStudiesTest {
     System.assert(lastEndpoint.contains('filter.overallStatus=RECRUITING'));
     System.assert(lastEndpoint.contains('pageSize=10'));
     System.assert(lastEndpoint.contains('sort=LastUpdateSubmitDate%3Adesc'));
+    System.assert(lastEndpoint.contains('countTotal=true'));
     System.assert(!lastEndpoint.contains('unknown'));
   }
 
@@ -95,7 +97,7 @@ private class ClinicalTrialsSearchStudiesTest {
     System.assert(lastEndpoint.contains('filter.ids=NCT00000002'));
     System.assert(!lastEndpoint.contains('filter.geo'));
     System.assert(lastEndpoint.contains('format=json'));
-    System.assert(lastEndpoint.contains('countTotal=false'));
+    System.assert(lastEndpoint.contains('countTotal=true'));
   }
 
   @IsTest
@@ -138,6 +140,7 @@ private class ClinicalTrialsSearchStudiesTest {
       result.errorMessage
     );
     System.assertEquals('[]', result.studiesJson);
+    System.assertEquals(null, result.totalCount);
   }
 
   private class ClinicalTrialsMock implements HttpCalloutMock {
