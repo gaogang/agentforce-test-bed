@@ -3,7 +3,6 @@
     <description>Assigns perms required by AFDX admin users.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>AFDX User Perms</label>
-    <permissionSets>Resort_Admin</permissionSets>
     <permissionSets>force__AgentforceServiceAgentBuilder</permissionSets>
     <permissionSets>force__EinsteinGPTPromptTemplateManager</permissionSets>
     <permissionSets>force__EinsteinGPTPromptTemplateUser</permissionSets>
