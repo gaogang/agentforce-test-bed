@@ -1,0 +1,14 @@
+{
+  "required" : [ ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "queryParamsJson" : {
+      "title" : "ClinicalTrials.gov Query Parameters JSON",
+      "description" : "JSON array of name/value objects using the GET /studies OpenAPI parameter names",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}
