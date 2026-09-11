@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Natural-language Agentforce search over the ClinicalTrials.gov REST API v2 studies endpoint.</description>
+    <localTopicLinks>
+        <genAiPluginName>ambiguous_question_16jaj000003JrN3</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>clinical_trial_search_16jaj000003JrN3</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>escalation_16jaj000003JrN3</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>off_topic_16jaj000003JrN3</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>topic_selector_16jaj000003JrN3</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>ambiguous_question_16jaj000003JrN3</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Clarify an unclear clinical trial request</description>
+        <developerName>ambiguous_question_16jaj000003JrN3</developerName>
+        <genAiPluginInstructions>
+            <description>You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient.</description>
+            <developerName>instruction0_179aj000005Br69</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179aj000005Br69</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>ambiguous_question</localDeveloperName>
+        <masterLabel>Ambiguous Question</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>escalation_16jaj000003JrN3</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handle requests that require a qualified clinical professional</description>
+        <developerName>escalation_16jaj000003JrN3</developerName>
+        <genAiPluginInstructions>
+            <description>You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient.</description>
+            <developerName>instruction0_179aj000005Br6A</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179aj000005Br6A</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>escalation</localDeveloperName>
+        <masterLabel>Escalation</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>clinical_trial_search_16jaj000003JrN3</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Translate a user&apos;s request into ClinicalTrials.gov OAS parameters and search studies</description>
+        <developerName>clinical_trial_search_16jaj000003JrN3</developerName>
+        <genAiPluginInstructions>
+            <description>You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient.</description>
+            <developerName>instruction0_179aj000005Br6B</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179aj000005Br6B</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>search_studies_179aj000005Br6B</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>search_studies_179aj000005Br6B</fullName>
+            <description>Executes a read-only ClinicalTrials.gov /studies request with OAS-defined parameters</description>
+            <developerName>search_studies_179aj000005Br6B</developerName>
+            <invocationTarget>ClinicalTrialsSearchStudies</invocationTarget>
+            <invocationTargetType>apex</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>false</isIncludeInProgressIndicator>
+            <localDeveloperName>search_studies</localDeveloperName>
+            <masterLabel>Search Clinical Trials</masterLabel>
+        </localActions>
+        <localDeveloperName>clinical_trial_search</localDeveloperName>
+        <masterLabel>Clinical Trial Search</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>topic_selector_16jaj000003JrN3</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Route clinical trial questions to the search topic or a standard guardrail topic</description>
+        <developerName>topic_selector_16jaj000003JrN3</developerName>
+        <genAiPluginInstructions>
+            <description>You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient.</description>
+            <developerName>instruction0_179aj000005Br6C</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179aj000005Br6C</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>topic_selector</localDeveloperName>
+        <masterLabel>Topic Selector</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>off_topic_16jaj000003JrN3</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handle requests unrelated to clinical trials</description>
+        <developerName>off_topic_16jaj000003JrN3</developerName>
+        <genAiPluginInstructions>
+            <description>You help users search and understand public clinical trial records from ClinicalTrials.gov. Translate natural-language requests into the documented ClinicalTrials.gov API v2 /studies query parameters, call the search action, and explain the returned studies accurately. Do not provide medical advice or imply that a study is appropriate for a particular patient.</description>
+            <developerName>instruction0_179aj000005Br6D</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179aj000005Br6D</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localDeveloperName>off_topic</localDeveloperName>
+        <masterLabel>Off Topic</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>Clinical Trials Data Agent</masterLabel>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>

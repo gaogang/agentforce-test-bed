@@ -8,10 +8,8 @@ config:
     developer_name: "Clinical_Trials_Data_Agent"
     agent_label: "Clinical Trials Data Agent"
     description: "Natural-language Agentforce search over the ClinicalTrials.gov REST API v2 studies endpoint."
-    agent_type: "AgentforceServiceAgent"
+    agent_type: "AgentforceEmployeeAgent"
 
-access:
-    default_agent_user: "clinical.trials.agent@glsdo-2609.demo"
 variables:
     pageToken: mutable string = ""
         description: "Next page token returned by ClinicalTrials.gov"

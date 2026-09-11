@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <agentAccesses>
+        <agentName>Clinical_Trials_Data_Agent</agentName>
+        <enabled>true</enabled>
+    </agentAccesses>
     <classAccesses>
         <apexClass>ClinicalTrialsSearchStudies</apexClass>
         <enabled>true</enabled>
@@ -8,5 +12,4 @@
   >Grants the Clinical Trials Data Agent access to the ClinicalTrials.gov callout action.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Clinical Trials Data Agent</label>
-    <license>Einstein Agent</license>
 </PermissionSet>
