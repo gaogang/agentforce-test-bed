@@ -1,0 +1,62 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "appliedQueryJson" : {
+      "title" : "Applied Query Parameters JSON",
+      "description" : "The normalized parameters actually sent to ClinicalTrials.gov",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : false
+    },
+    "errorMessage" : {
+      "title" : "Error Message",
+      "description" : "Safe user-facing error message when the request fails",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "nextPageToken" : {
+      "title" : "Next Page Token",
+      "description" : "Opaque token for the next page of the same query",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "returnedStudyCount" : {
+      "title" : "Returned Study Count",
+      "description" : "Number of studies returned in this page",
+      "lightning:type" : "lightning__integerType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "studiesJson" : {
+      "title" : "Study Summaries JSON",
+      "description" : "JSON array of returned clinical trial summaries",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "success" : {
+      "title" : "Success",
+      "description" : "Whether the external API call succeeded",
+      "lightning:type" : "lightning__booleanType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "totalCount" : {
+      "title" : "Total Count",
+      "description" : "Total number of studies matching the query across all pages. Present on the first page of a search; the API omits it on continuation pages.",
+      "lightning:type" : "lightning__integerType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : false,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

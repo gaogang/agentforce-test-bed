@@ -65,7 +65,7 @@ subagent clinical_trial_search:
                             PAGING: for a "show more" request, reuse the previous query parameters exactly and add {"name":"pageToken","value":"<nextPageToken from the last response>"} in place of any prior pageToken entry. Only pageSize and pageToken may change between pages of the same search.
                             ZERO RESULTS: when returnedStudyCount is 0, say so plainly and state which filters were applied. You may retry once with the most restrictive constraint removed - usually filter.advanced or filter.geo - but tell the user that you broadened the search and which constraint you dropped.
                             After the action returns, inspect appliedQueryJson and returnedStudyCount. Do not claim a filter was applied unless it appears in appliedQueryJson. Do not say that studies are available without displaying the returned records.
-                            Always state the total number of matching studies from totalCount (not just the number shown on this page), and mention that more results are available if totalCount exceeds returnedStudyCount.
+                            TOTALS: the action always returns totalCount (the number of studies matching across all pages) and returnedStudyCount (the number on this page). Decide for yourself whether the total belongs in the reply: include it whenever it adds real information - most importantly when totalCount exceeds returnedStudyCount, where you should give the total and say more results are available - and leave it out when it would only restate what the user can already see, such as when totalCount equals returnedStudyCount or a single study was requested by NCT number. Never present returnedStudyCount as if it were the total. The API omits totalCount on continuation pages, so when it is empty on a "show more" response, reuse the total you already reported rather than recomputing it or telling the user the total is unknown.
                             Extract key information from the action output. If a briefSummary or any other study attribute exceeds 128 words, condense it to under 128 words while preserving all key points before presenting it to the user.
                             Each study summary includes startDate, primaryCompletionDate, completionDate, studyFirstPostDate, and lastUpdatePostDate. Always surface the study's start date and completion date (or primary completion date if completion date is absent) alongside the other key details; omit a date only if it is empty in the data.
                             For multiple studies, render one row per returned study in a compact Markdown table. Omit empty fields instead of inventing values.
@@ -114,12 +114,12 @@ subagent clinical_trial_search:
                     label: "Returned Study Count"
                     description: "Number of studies returned in this page"
                     complex_data_type_name: "lightning__integerType"
-                    filter_from_agent: True
+                    filter_from_agent: False
                 totalCount: object
                     label: "Total Count"
-                    description: "Total number of studies matching the query across all pages"
+                    description: "Total number of studies matching the query across all pages. Present on the first page of a search; the API omits it on continuation pages."
                     complex_data_type_name: "lightning__integerType"
-                    filter_from_agent: True
+                    filter_from_agent: False
 
 subagent escalation:
     label: "Escalation"
